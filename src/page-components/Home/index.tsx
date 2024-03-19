@@ -1,4 +1,3 @@
-import HomeProvider from './HomeContext';
 import CommonButton from 'components/CommonButton';
 import { portkey } from '@portkey/accounts';
 import styles from './styles.module.less';
@@ -11,7 +10,7 @@ import clsx from 'clsx';
 export default function Home() {
   const [mnemonic, setMnemonic] = useState<string>();
   const [loading, setLoading] = useState<boolean>();
-  const [accountList, setAccountList] = useState<{ address: string; BIP44Path: string }[]>();
+  const [accountList, setAccountList] = useState<{ address: string }[]>();
   return (
     <div className={clsx(cardStyles.card, cardStyles['from-card'], styles.body)}>
       <h4>mnemonic</h4>
@@ -34,7 +33,7 @@ export default function Home() {
             const wallet = accountProvider.create().wallet;
             accountList.push({
               address: wallet.address,
-              BIP44Path: wallet.BIP44Path,
+              // BIP44Path: wallet.BIP44Path,
             });
           }
           setAccountList(accountList);
