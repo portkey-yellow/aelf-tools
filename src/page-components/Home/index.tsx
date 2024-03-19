@@ -4,8 +4,15 @@ import styles from './styles.module.less';
 import cardStyles from './Card/styles.module.less';
 import { Input, message } from 'antd';
 import { useState } from 'react';
-import { sleep } from 'utils';
+import { isELFAddress, sleep } from 'utils';
 import clsx from 'clsx';
+
+const checkMnemonic = (mnemonic: string) => {
+  const tmpProvider = new portkey.AccountProvider();
+  (tmpProvider as any)._mnemonic = mnemonic;
+  const baseWallet = tmpProvider.create().wallet;
+  return isELFAddress(baseWallet.address);
+};
 
 export default function Home() {
   const [mnemonic, setMnemonic] = useState<string>();
@@ -23,17 +30,19 @@ export default function Home() {
         onClick={async () => {
           if (loading) return;
           if (!mnemonic) return message.error('Please enter mnemonic phrase');
+          if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
           const accountProvider = new portkey.AccountProvider();
           (accountProvider as any)._mnemonic = mnemonic;
           const accountList = [];
           const hide = message.loading('Generating wallet address..', 0);
           setLoading(true);
-          await sleep(1000);
+          await sleep(500);
           for (let i = 0; i < 205; i++) {
             const wallet = accountProvider.create().wallet;
             accountList.push({
               address: wallet.address,
-              // BIP44Path: wallet.BIP44Path,
+              BIP44Path: wallet.BIP44Path,
+              privateKey: wallet.privateKey,
             });
           }
           setAccountList(accountList);
