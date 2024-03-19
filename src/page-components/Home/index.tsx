@@ -41,8 +41,6 @@ export default function Home() {
             const wallet = accountProvider.create().wallet;
             accountList.push({
               address: wallet.address,
-              BIP44Path: wallet.BIP44Path,
-              privateKey: wallet.privateKey,
             });
           }
           setAccountList(accountList);
