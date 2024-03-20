@@ -20,7 +20,7 @@ const navList = [
   // },
 ];
 
-function SelectLanguage({ className }: { className?: string }) {
+export function SelectLanguage({ className }: { className?: string }) {
   const { language, changeLanguage } = useLanguage();
   return (
     <CommonSelect

@@ -8,12 +8,16 @@ First, setup env files refer to `.env.example`:
 * `.env.mainnet.local` for mainnet
 * `.env.testnet.local` for testnet
 
-Run the development server:
+Program start
 
 ```bash
-npm run dev
-# or
-yarn dev
+yarn
+
+# build packages
+yarn build
+
+# try to run start
+yarn start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
