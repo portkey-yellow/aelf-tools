@@ -2172,17 +2172,6 @@ aelf-bridge@^0.0.10:
     socket.io-client "^2.3.0"
     uuid "^3.3.3"
 
-"aelf-bridge@git+https://github.com/mason-hz/aelf-bridge":
-  version "0.0.10"
-  resolved "git+https://github.com/mason-hz/aelf-bridge#85a5f9b99502e3e5bdc3cde33567a20cb4fc8f87"
-  dependencies:
-    "@babel/runtime" "^7.6.3"
-    browserify-cipher "^1.0.1"
-    create-hmac "^1.1.7"
-    elliptic "^6.5.1"
-    socket.io-client "^2.3.0"
-    uuid "^3.3.3"
-
 aelf-sdk-cross-chain@^1.0.14:
   version "1.0.14"
   resolved "https://registry.yarnpkg.com/aelf-sdk-cross-chain/-/aelf-sdk-cross-chain-1.0.14.tgz#f3a7df752a2583e6d13ea38610175f3750a81942"

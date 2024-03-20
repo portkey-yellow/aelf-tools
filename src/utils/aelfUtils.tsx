@@ -14,6 +14,8 @@ import { isMobileDevices } from './isMobile';
 import { AelfInstancesKey, ChainId } from 'types';
 import type { AElfWallet } from '@aelf-react/types';
 import CommonMessage from 'components/CommonMessage';
+import { portkey } from '@portkey/accounts';
+import { LANG_MAX } from 'constants/misc';
 const Wallet = AElf.wallet;
 
 let wallet: AElfWallet;
@@ -341,3 +343,47 @@ export const getELFAddress = (address?: string) => {
   const list = address.split('_');
   if (list.length === 3 && isELFAddress(list[1])) return list[1];
 };
+
+export const checkMnemonic = (mnemonic: string) => {
+  const tmpProvider = new portkey.AccountProvider();
+  (tmpProvider as any)._mnemonic = mnemonic;
+  const baseWallet = tmpProvider.create().wallet;
+  return isELFAddress(baseWallet.address);
+};
+
+export async function checkElfChainAllowanceAndApprove({
+  tokenContract,
+  approveTargetAddress,
+  account,
+  contractUseAmount,
+  pivotBalance,
+  symbol,
+}: any) {
+  const [allowance, info] = await Promise.all([
+    tokenContract.callViewMethod('GetAllowance', {
+      symbol,
+      owner: account,
+      spender: approveTargetAddress,
+    }),
+    tokenContract.callViewMethod('GetTokenInfo', { symbol }),
+  ]);
+  if (allowance?.error) throw allowance.error;
+
+  const allowanceBN = new BigNumber(allowance?.data?.allowance ?? allowance?.data?.amount ?? 0);
+  const pivotBalanceBN = contractUseAmount
+    ? new BigNumber(contractUseAmount)
+    : timesDecimals(pivotBalance, info.decimals ?? 8);
+  if (allowanceBN.lt(pivotBalanceBN)) {
+    const approveResult = await tokenContract.callSendMethod('approve', account, {
+      spender: approveTargetAddress,
+      symbol,
+      amount: LANG_MAX.toFixed(0),
+    });
+    if (approveResult?.error) {
+      throw approveResult.error;
+    } else {
+      return approveResult;
+    }
+  }
+  return true;
+}

@@ -4,15 +4,10 @@ import styles from './styles.module.less';
 import cardStyles from './Card/styles.module.less';
 import { Input, message } from 'antd';
 import { useState } from 'react';
-import { isELFAddress, sleep } from 'utils';
+import { sleep } from 'utils';
 import clsx from 'clsx';
-
-const checkMnemonic = (mnemonic: string) => {
-  const tmpProvider = new portkey.AccountProvider();
-  (tmpProvider as any)._mnemonic = mnemonic;
-  const baseWallet = tmpProvider.create().wallet;
-  return isELFAddress(baseWallet.address);
-};
+import { checkMnemonic } from 'utils/aelfUtils';
+import Link from 'next/link';
 
 export default function Home() {
   const [mnemonic, setMnemonic] = useState<string>();
@@ -20,6 +15,7 @@ export default function Home() {
   const [accountList, setAccountList] = useState<{ address: string }[]>();
   return (
     <div className={clsx(cardStyles.card, cardStyles['from-card'], styles.body)}>
+      <Link href="/invest">Go to Invest</Link>
       <h4>mnemonic</h4>
       <Input
         onChange={(e) => {

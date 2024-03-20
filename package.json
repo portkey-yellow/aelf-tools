@@ -33,7 +33,6 @@
     "@web3-react/network": "^8.2.2",
     "@web3-react/types": "^8.2.2",
     "@web3-react/walletconnect-v2": "8.3.7",
-    "aelf-bridge": "git+https://github.com/mason-hz/aelf-bridge",
     "aelf-sdk": "3.2.45-beta.0",
     "aelf-sdk-cross-chain": "^1.0.14",
     "antd": "^4.21.7",
