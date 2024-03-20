@@ -1030,10 +1030,10 @@
   resolved "https://registry.npmjs.org/@portkey/accounts/-/accounts-2.2.0.tgz#d429e0f240335573d167173c99a20bef657781a4"
   integrity sha512-KwUvkrkoK0ENRXk+p82fwv+uiGRHZY6+9AP2qpCHVtcT+qs1HjTN/p6XGgx7/aXdaq5UENXVxeALsYJfbru5kw==
 
-"@portkey/contracts@^2.0.0-alpha.0":
-  version "2.0.0-alpha.0"
-  resolved "https://registry.npmjs.org/@portkey/contracts/-/contracts-2.0.0-alpha.0.tgz#c7d29815ceaf78bac2b14d6e9debd672d7ae3520"
-  integrity sha512-16tfyG1oVs7XYknj8W8edS4l5CuBHSr9tuyFQfuvD1s29P1NOP5MgixVLegUDKQRy6JynCb+QJHMcC5FJrg3PA==
+"@portkey/contracts@^2.2.1-alpha.0":
+  version "2.3.1"
+  resolved "https://registry.npmjs.org/@portkey/contracts/-/contracts-2.3.1.tgz#1991d2f9e758f88f7e3355ca69997a1e16c69bcd"
+  integrity sha512-LUS1mkuI5GGIoJasLHeIkOWxkh5CLi8KW91d2XDUS3nq1KVhv8PoI0PTIb+hC0L1KZNEqrwEWBvs1VdrFJHqYA==
 
 "@portkey/detect-provider@1.0.1":
   version "1.0.1"

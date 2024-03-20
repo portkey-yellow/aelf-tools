@@ -108,8 +108,8 @@ function Invest() {
                     investAmount,
                   });
                   if (req?.error) throw req.error;
-                } catch (error) {
-                  errorList.push({ error, address: element.address });
+                } catch (error: any) {
+                  errorList.push({ error: { ...error, message: error?.message }, address: element.address });
                 } finally {
                   setResultCount((v) => v + 1);
                 }
