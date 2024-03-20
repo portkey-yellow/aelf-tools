@@ -70,7 +70,7 @@ const ItemList: FormItemProps[] = [
   },
 ];
 
-function TeamOfService() {
+function Invest() {
   const [pin, setPin] = useState<string>();
   const [loading, setLoading] = useState<boolean>();
   const [errorList, setErrorList] = useState<any[]>();
@@ -219,4 +219,4 @@ function TeamOfService() {
   );
 }
 
-export default memo(TeamOfService);
+export default memo(Invest);

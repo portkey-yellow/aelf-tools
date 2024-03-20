@@ -1,10 +1,9 @@
 import { memo, useCallback, useState } from 'react';
-import { Button, Col, Form, Input, Progress, Row, message } from 'antd';
+import { Button, Col, Form, FormItemProps, Input, Progress, Row, message } from 'antd';
 import clsx from 'clsx';
 import cardStyles from '../Home/Card/styles.module.less';
 import homeStyles from '../Home/styles.module.less';
-import { timesDecimals } from 'utils/calculate';
-import { checkElfChainAllowanceAndApprove, checkMnemonic } from 'utils/aelfUtils';
+import { checkMnemonic } from 'utils/aelfUtils';
 import CommonButton from 'components/CommonButton';
 import dynamic from 'next/dynamic';
 import { ZERO } from 'constants/misc';
@@ -12,6 +11,7 @@ import { aes } from '@portkey/utils';
 import Link from 'next/link';
 import { CHILD_COUNT, EWELL_CONTRACT, MNEMONIC_KEY, RPC, TOKEN_CONTRACT } from 'constants/tools';
 import { getAccounts, initContract } from 'utils/tools';
+import { InputFormItem } from 'page-components/FormItem';
 const ReactJson = dynamic(() => import('react-json-view'), { ssr: false });
 
 const InitialValues = {
@@ -20,11 +20,42 @@ const InitialValues = {
   tokenContract: TOKEN_CONTRACT,
   childCount: CHILD_COUNT,
   projectId: 'e3a86abf674ec1e4b975df1bfd4771952f7912392318039a5cc91f497d26c76f',
-  symbol: 'USDT',
-  investAmount: timesDecimals(50, 6).toFixed(0),
 };
 
-function TeamOfService() {
+const ItemList: FormItemProps[] = [
+  {
+    label: 'Mnemonic',
+    name: 'mnemonic',
+    rules: [{ required: true, message: 'Please Mnemonic!' }],
+  },
+  {
+    label: 'RPC',
+    name: 'rpcUrl',
+    rules: [{ required: true, message: 'Please input RPC!' }],
+  },
+  {
+    label: 'Ewell Contract',
+    name: 'ewellContract',
+    rules: [{ required: true, message: 'Please Ewell Contract!' }],
+  },
+  {
+    label: 'Child Wallet Count',
+    name: 'childCount',
+    rules: [{ required: true, message: 'Please Child Count!' }],
+  },
+  {
+    label: 'Token Contract',
+    name: 'tokenContract',
+    rules: [{ required: true, message: 'Please Token Contract!' }],
+  },
+  {
+    label: 'projectId',
+    name: 'projectId',
+    rules: [{ required: true, message: 'Please projectId!' }],
+  },
+];
+
+function Invest() {
   const [pin, setPin] = useState<string>();
   const [loading, setLoading] = useState<boolean>();
   const [errorList, setErrorList] = useState<any[]>();
@@ -37,38 +68,21 @@ function TeamOfService() {
         if (loading) return;
         setResultCount(0);
         setErrorList([]);
-        const {
-          mnemonic,
-          ewellContract: ewell,
-          tokenContract: token,
-          rpcUrl,
-          childCount,
-          projectId,
-          symbol,
-          investAmount,
-        } = values;
+        const { mnemonic, ewellContract: ewell, tokenContract: token, rpcUrl, childCount, projectId } = values;
         if (ZERO.plus(childCount).isNaN()) return message.error('Child Wallet Count Error!');
         if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
-        const accounts = await getAccounts(mnemonic, childCount);
+        const accounts = await getAccounts(mnemonic, ZERO.plus(childCount).toNumber());
         setLoading(true);
         const errorList = [];
         setTotalCount(accounts.length);
         const hide = message.loading('Invest...', 0);
         for (let i = 0; i < accounts.length; i++) {
           const element = accounts[i];
-          const [ewellContract, tokenContract] = await initContract(element, ewell, token, rpcUrl);
+          const [ewellContract] = await initContract(element, ewell, token, rpcUrl);
           try {
-            await checkElfChainAllowanceAndApprove({
-              tokenContract,
-              approveTargetAddress: ewell,
-              account: element.address,
-              contractUseAmount: investAmount,
-              symbol,
-            });
-            const req = await ewellContract.callSendMethod('Invest', '', {
+            const req = await ewellContract.callSendMethod('Claim', '', {
               projectId,
-              symbol,
-              investAmount,
+              user: element.address,
             });
             if (req?.error) throw req.error;
           } catch (error) {
@@ -135,45 +149,12 @@ function TeamOfService() {
         </Col>
       </Row>
       <Form form={form as any} autoComplete="off" initialValues={InitialValues} onFinish={onFinish}>
-        <Form.Item label="Mnemonic" name="mnemonic" rules={[{ required: true, message: 'Please Mnemonic!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item label="RPC" name="rpcUrl" rules={[{ required: true, message: 'Please input RPC!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Ewell Contract"
-          name="ewellContract"
-          rules={[{ required: true, message: 'Please Ewell Contract!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Child Wallet Count"
-          name="childCount"
-          rules={[{ required: true, message: 'Please Child Count!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Token Contract"
-          name="tokenContract"
-          rules={[{ required: true, message: 'Please Token Contract!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item label="projectId" name="projectId" rules={[{ required: true, message: 'Please projectId!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item label="symbol" name="symbol" rules={[{ required: true, message: 'Please symbol!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="investAmount"
-          name="investAmount"
-          rules={[{ required: true, message: 'Please investAmount!' }]}>
-          <Input />
-        </Form.Item>
+        {ItemList.map((i, index) => (
+          <InputFormItem key={index} {...i} />
+        ))}
         <Form.Item>
           <Button disabled={loading} style={{ width: '100%' }} type="primary" htmlType="submit">
-            Invest
+            Claim
           </Button>
         </Form.Item>
       </Form>
@@ -206,4 +187,4 @@ function TeamOfService() {
   );
 }
 
-export default memo(TeamOfService);
+export default memo(Invest);

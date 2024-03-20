@@ -16,6 +16,7 @@ export default function Home() {
   return (
     <div className={clsx(cardStyles.card, cardStyles['from-card'], styles.body)}>
       <Link href="/invest">Go to Invest</Link>
+      <Link href="/claim">Go to Claim</Link>
       <h4>mnemonic</h4>
       <Input
         onChange={(e) => {
