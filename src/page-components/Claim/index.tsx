@@ -1,34 +1,29 @@
 import { memo, useCallback, useState } from 'react';
-import { Button, Col, Form, FormItemProps, Input, Progress, Row, message } from 'antd';
+import { Button, Col, Divider, Form, FormItemProps, Progress, message } from 'antd';
 import clsx from 'clsx';
 import cardStyles from '../Home/Card/styles.module.less';
 import homeStyles from '../Home/styles.module.less';
-import { checkMnemonic } from 'utils/aelfUtils';
 import CommonButton from 'components/CommonButton';
 import dynamic from 'next/dynamic';
 import { ZERO } from 'constants/misc';
-import { aes } from '@portkey/utils';
 import Link from 'next/link';
-import { CHILD_COUNT, EWELL_CONTRACT, MNEMONIC_KEY, RPC, TOKEN_CONTRACT } from 'constants/tools';
-import { chunkArray, getAccounts, initContract } from 'utils/tools';
+import { EWELL_CONTRACT, RPC, TOKEN_CONTRACT } from 'constants/tools';
+import { chunkArray, initContract } from 'utils/tools';
 import { InputFormItem } from 'page-components/FormItem';
-import { IContract } from '@portkey/types';
+import { IContract, IBlockchainWallet } from '@portkey/types';
+import { GeneratingWallet } from 'page-components/GeneratingWallet';
+import { CheckboxValueType } from 'antd/lib/checkbox/Group';
+import { CheckAccounts } from 'page-components/CheckAccounts';
 const ReactJson = dynamic(() => import('react-json-view'), { ssr: false });
 
 const InitialValues = {
   rpcUrl: RPC,
   ewellContract: EWELL_CONTRACT,
   tokenContract: TOKEN_CONTRACT,
-  childCount: CHILD_COUNT,
   projectId: 'e3a86abf674ec1e4b975df1bfd4771952f7912392318039a5cc91f497d26c76f',
 };
 
 const ItemList: FormItemProps[] = [
-  {
-    label: 'Mnemonic',
-    name: 'mnemonic',
-    rules: [{ required: true, message: 'Please Mnemonic!' }],
-  },
   {
     label: 'RPC',
     name: 'rpcUrl',
@@ -38,11 +33,6 @@ const ItemList: FormItemProps[] = [
     label: 'Ewell Contract',
     name: 'ewellContract',
     rules: [{ required: true, message: 'Please Ewell Contract!' }],
-  },
-  {
-    label: 'Child Wallet Count',
-    name: 'childCount',
-    rules: [{ required: true, message: 'Please Child Count!' }],
   },
   {
     label: 'Token Contract',
@@ -73,11 +63,13 @@ async function onClaim({
 }
 
 function Invest() {
-  const [pin, setPin] = useState<string>();
   const [loading, setLoading] = useState<boolean>();
   const [errorList, setErrorList] = useState<any[]>();
   const [resultCount, setResultCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
+  const [accounts, setAccounts] = useState<IBlockchainWallet[]>();
+  const [checkedList, setCheckedList] = useState<CheckboxValueType[]>();
+
   const [form] = Form.useForm();
 
   const onFinish = useCallback(
@@ -86,16 +78,15 @@ function Invest() {
         if (loading) return;
         setResultCount(0);
         setErrorList([]);
-        const { mnemonic, ewellContract: ewell, rpcUrl, childCount, projectId } = values;
-        if (ZERO.plus(childCount).isNaN()) return message.error('Child Wallet Count Error!');
-        if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
-        const accounts = await getAccounts(mnemonic, ZERO.plus(childCount).toNumber());
+        const { ewellContract: ewell, rpcUrl, projectId } = values;
+        if (!accounts?.length) return message.error('Please GeneratingWallet!');
+        const _accounts = accounts.filter((i) => checkedList?.includes(i.address));
         setLoading(true);
         const errorList: { error: unknown; address: any }[] = [];
-        setTotalCount(accounts.length);
+        setTotalCount(_accounts.length);
         const hide = message.loading('Claim...', 0);
 
-        const chunkAccounts = chunkArray(accounts, 6);
+        const chunkAccounts = chunkArray(_accounts, 6);
 
         for (let i = 0; i < chunkAccounts.length; i++) {
           const elementList = chunkAccounts[i];
@@ -126,55 +117,22 @@ function Invest() {
         setLoading(false);
       }
     },
-    [loading],
+    [accounts, checkedList, loading],
   );
+
   return (
     <div className={clsx(cardStyles.card, cardStyles['from-card'], homeStyles.body)}>
       <Link href="/">Back to Home</Link>
-      <h4>Pin</h4>
-      <Input
-        onChange={(e) => {
-          setPin(e.target.value);
+      <Divider />
+      <GeneratingWallet
+        setAccounts={(acc: IBlockchainWallet[]) => {
+          setAccounts(acc);
+          const list = (acc || [])?.map((i) => i.address);
+          setCheckedList(list);
         }}
       />
-      <Row>
-        <Col span={12}>
-          <CommonButton
-            onClick={() => {
-              try {
-                const aesMNEMONIC = localStorage.getItem(MNEMONIC_KEY);
-                if (!aesMNEMONIC) return message.error('No mnemonic phrase detected');
-                if (!pin) return message.error('Please enter pin');
-                const mnemonic = aes.decrypt(aesMNEMONIC, pin);
-                if (!(mnemonic && checkMnemonic(mnemonic))) return message.error('Wrong pin code');
-                form.setFields([{ name: 'mnemonic', value: mnemonic }]);
-                message.success('load success');
-              } catch (error) {
-                message.error('load fail');
-              }
-            }}>
-            load Mnemonic
-          </CommonButton>
-        </Col>
-        <Col span={12}>
-          <CommonButton
-            onClick={() => {
-              try {
-                const mnemonic = form.getFieldValue('mnemonic');
-                if (mnemonic && !checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
-                if (!pin) return message.error('Please enter pin');
-                const aesMNEMONIC = aes.encrypt(mnemonic, pin);
-                if (!aesMNEMONIC) return message.error('encrypt fail');
-                localStorage.setItem(MNEMONIC_KEY, aesMNEMONIC);
-                message.success('save success');
-              } catch (error) {
-                message.error('save fail');
-              }
-            }}>
-            save Mnemonic
-          </CommonButton>
-        </Col>
-      </Row>
+      <CheckAccounts accounts={accounts} checkedList={checkedList} setCheckedList={setCheckedList} />
+      <Divider />
       <Form form={form as any} autoComplete="off" initialValues={InitialValues} onFinish={onFinish}>
         {ItemList.map((i, index) => (
           <InputFormItem key={index} {...i} />
