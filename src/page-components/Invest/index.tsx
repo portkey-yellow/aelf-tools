@@ -88,6 +88,7 @@ function TeamOfService() {
           symbol,
           investAmount,
         } = values;
+        if (ZERO.plus(childCount).isNaN()) return message.error('Child Wallet Count Error!');
         if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
         const accounts = await getAccounts(mnemonic, childCount);
         setLoading(true);
@@ -102,8 +103,8 @@ function TeamOfService() {
               tokenContract,
               approveTargetAddress: ewell,
               account: element.address,
-              pivotBalance: 50,
-              symbol: 'USDT',
+              contractUseAmount: investAmount,
+              symbol,
             });
             const req = await ewellContract.callSendMethod('Invest', '', {
               projectId,
