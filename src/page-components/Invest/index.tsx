@@ -11,7 +11,7 @@ import { ZERO } from 'constants/misc';
 import { aes } from '@portkey/utils';
 import Link from 'next/link';
 import { CHILD_COUNT, EWELL_CONTRACT, MNEMONIC_KEY, RPC, TOKEN_CONTRACT } from 'constants/tools';
-import { getAccounts, initContract } from 'utils/tools';
+import { chunkArray, getAccounts, initContract } from 'utils/tools';
 import { InputFormItem } from 'page-components/FormItem';
 const ReactJson = dynamic(() => import('react-json-view'), { ssr: false });
 
@@ -97,30 +97,41 @@ function Invest() {
         if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
         const accounts = await getAccounts(mnemonic, ZERO.plus(childCount).toNumber());
         setLoading(true);
-        const errorList = [];
+        const errorList: { error: unknown; address: any }[] = [];
         setTotalCount(accounts.length);
+
+        const chunkAccounts = chunkArray(accounts, 6);
+
         const hide = message.loading('Invest...', 0);
-        for (let i = 0; i < accounts.length; i++) {
-          const element = accounts[i];
-          const [ewellContract, tokenContract] = await initContract(element, ewell, token, rpcUrl);
+        for (let i = 0; i < chunkAccounts.length; i++) {
+          const elementList = chunkAccounts[i];
           try {
-            await checkElfChainAllowanceAndApprove({
-              tokenContract,
-              approveTargetAddress: ewell,
-              account: element.address,
-              contractUseAmount: investAmount,
-              symbol,
-            });
-            const req = await ewellContract.callSendMethod('Invest', '', {
-              projectId,
-              symbol,
-              investAmount,
-            });
-            if (req?.error) throw req.error;
+            await Promise.all(
+              elementList.map(async (element) => {
+                const [ewellContract, tokenContract] = await initContract(element, rpcUrl, [ewell, token]);
+                try {
+                  await checkElfChainAllowanceAndApprove({
+                    tokenContract,
+                    approveTargetAddress: ewell,
+                    account: element.address,
+                    contractUseAmount: investAmount,
+                    symbol,
+                  });
+                  const req = await ewellContract.callSendMethod('Invest', '', {
+                    projectId,
+                    symbol,
+                    investAmount,
+                  });
+                  if (req?.error) throw req.error;
+                } catch (error) {
+                  errorList.push({ error, address: element.address });
+                } finally {
+                  setResultCount((v) => v + 1);
+                }
+              }),
+            );
           } catch (error) {
-            errorList.push({ error, address: element.address });
-          } finally {
-            setResultCount((v) => v + 1);
+            console.log(error, '===error');
           }
           setErrorList(JSON.parse(JSON.stringify(errorList)));
         }

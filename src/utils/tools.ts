@@ -3,25 +3,23 @@ import { getContractBasic } from '@portkey/contracts';
 import { message } from 'antd';
 import { sleep } from 'utils';
 
-export const initContract = async (account: any, ewell: string, token: string, rpcUrl: string) => {
-  const [ewellContract, tokenContract] = await Promise.all([
-    getContractBasic({
-      rpcUrl,
-      account,
-      contractAddress: ewell,
-    }),
-    getContractBasic({
-      rpcUrl,
-      account,
-      contractAddress: token,
-    }),
-  ]);
-  return [ewellContract, tokenContract];
+export const initContract = async (account: any, rpcUrl: string, contractList: string[]) => {
+  return Promise.all(
+    contractList.map((contract) =>
+      getContractBasic({
+        rpcUrl,
+        account,
+        contractAddress: contract,
+      }),
+    ),
+  );
 };
 
 const Wallets: { [key: string]: any[] } = {};
 
 export const getAccounts = async (mnemonic: string, childCount = 5) => {
+  console.log(childCount, '====childCount');
+
   if (!Wallets[mnemonic] || Wallets[mnemonic].length === childCount) {
     const accountProvider = new portkey.AccountProvider();
     (accountProvider as any)._mnemonic = mnemonic;
@@ -37,3 +35,11 @@ export const getAccounts = async (mnemonic: string, childCount = 5) => {
   }
   return Wallets[mnemonic];
 };
+
+export function chunkArray(array: Array<any>, chunkSize = 5) {
+  const result = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    result.push(array.slice(i, i + chunkSize));
+  }
+  return result;
+}

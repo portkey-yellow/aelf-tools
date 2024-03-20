@@ -10,7 +10,7 @@ import { ZERO } from 'constants/misc';
 import { aes } from '@portkey/utils';
 import Link from 'next/link';
 import { CHILD_COUNT, EWELL_CONTRACT, MNEMONIC_KEY, RPC, TOKEN_CONTRACT } from 'constants/tools';
-import { getAccounts, initContract } from 'utils/tools';
+import { chunkArray, getAccounts, initContract } from 'utils/tools';
 import { InputFormItem } from 'page-components/FormItem';
 import { IContract } from '@portkey/types';
 const ReactJson = dynamic(() => import('react-json-view'), { ssr: false });
@@ -72,14 +72,6 @@ async function onClaim({
   if (req?.error) throw req.error;
 }
 
-function chunkArray(array: Array<any>, chunkSize = 5) {
-  const result = [];
-  for (let i = 0; i < array.length; i += chunkSize) {
-    result.push(array.slice(i, i + chunkSize));
-  }
-  return result;
-}
-
 function Invest() {
   const [pin, setPin] = useState<string>();
   const [loading, setLoading] = useState<boolean>();
@@ -87,13 +79,14 @@ function Invest() {
   const [resultCount, setResultCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [form] = Form.useForm();
+
   const onFinish = useCallback(
     async (values: any) => {
       try {
         if (loading) return;
         setResultCount(0);
         setErrorList([]);
-        const { mnemonic, ewellContract: ewell, tokenContract: token, rpcUrl, childCount, projectId } = values;
+        const { mnemonic, ewellContract: ewell, rpcUrl, childCount, projectId } = values;
         if (ZERO.plus(childCount).isNaN()) return message.error('Child Wallet Count Error!');
         if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
         const accounts = await getAccounts(mnemonic, ZERO.plus(childCount).toNumber());
@@ -109,9 +102,10 @@ function Invest() {
           try {
             await Promise.all(
               elementList.map(async (element) => {
-                const [ewellContract] = await initContract(element, ewell, token, rpcUrl);
+                const [ewellContract] = await initContract(element, rpcUrl, [ewell]);
                 try {
                   await onClaim({ account: element, ewellContract, projectId });
+                  console.log('1234');
                 } catch (error) {
                   errorList.push({ error, address: element.address });
                 } finally {
