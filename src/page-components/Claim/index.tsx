@@ -46,22 +46,6 @@ const ItemList: FormItemProps[] = [
   },
 ];
 
-async function onClaim({
-  ewellContract,
-  projectId,
-  account,
-}: {
-  account: any;
-  ewellContract: IContract;
-  projectId: string;
-}) {
-  const req = await ewellContract.callSendMethod('Claim', '', {
-    projectId,
-    user: account.address,
-  });
-  if (req?.error) throw req.error;
-}
-
 function Invest() {
   const [loading, setLoading] = useState<boolean>();
   const [errorList, setErrorList] = useState<any[]>();
@@ -95,10 +79,15 @@ function Invest() {
               elementList.map(async (element) => {
                 const [ewellContract] = await initContract(element, rpcUrl, [ewell]);
                 try {
-                  await onClaim({ account: element, ewellContract, projectId });
-                  console.log('1234');
-                } catch (error) {
-                  errorList.push({ error, address: element.address });
+                  const req = await ewellContract.callSendMethod('Claim', '', {
+                    projectId,
+                    user: element.address,
+                  });
+                  console.log(req, '=====req');
+
+                  if (req?.error) throw req.error;
+                } catch (error: any) {
+                  errorList.push({ error: { ...error, message: error?.message }, address: element.address });
                 } finally {
                   setResultCount((v) => v + 1);
                 }
