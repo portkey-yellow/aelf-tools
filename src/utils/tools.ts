@@ -21,8 +21,8 @@ export const initContract = async (account: any, ewell: string, token: string, r
 
 const Wallets: { [key: string]: any[] } = {};
 
-export const getAccounts = async (mnemonic: string, childCount = 0) => {
-  if (!Wallets[mnemonic]) {
+export const getAccounts = async (mnemonic: string, childCount = 5) => {
+  if (!Wallets[mnemonic] || Wallets[mnemonic].length === childCount) {
     const accountProvider = new portkey.AccountProvider();
     (accountProvider as any)._mnemonic = mnemonic;
     const accountList = [];

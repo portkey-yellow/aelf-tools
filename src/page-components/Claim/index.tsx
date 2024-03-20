@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { CHILD_COUNT, EWELL_CONTRACT, MNEMONIC_KEY, RPC, TOKEN_CONTRACT } from 'constants/tools';
 import { getAccounts, initContract } from 'utils/tools';
 import { InputFormItem } from 'page-components/FormItem';
+import { IContract } from '@portkey/types';
 const ReactJson = dynamic(() => import('react-json-view'), { ssr: false });
 
 const InitialValues = {
@@ -55,6 +56,30 @@ const ItemList: FormItemProps[] = [
   },
 ];
 
+async function onClaim({
+  ewellContract,
+  projectId,
+  account,
+}: {
+  account: any;
+  ewellContract: IContract;
+  projectId: string;
+}) {
+  const req = await ewellContract.callSendMethod('Claim', '', {
+    projectId,
+    user: account.address,
+  });
+  if (req?.error) throw req.error;
+}
+
+function chunkArray(array: Array<any>, chunkSize = 5) {
+  const result = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    result.push(array.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
 function Invest() {
   const [pin, setPin] = useState<string>();
   const [loading, setLoading] = useState<boolean>();
@@ -73,23 +98,31 @@ function Invest() {
         if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
         const accounts = await getAccounts(mnemonic, ZERO.plus(childCount).toNumber());
         setLoading(true);
-        const errorList = [];
+        const errorList: { error: unknown; address: any }[] = [];
         setTotalCount(accounts.length);
-        const hide = message.loading('Invest...', 0);
-        for (let i = 0; i < accounts.length; i++) {
-          const element = accounts[i];
-          const [ewellContract] = await initContract(element, ewell, token, rpcUrl);
+        const hide = message.loading('Claim...', 0);
+
+        const chunkAccounts = chunkArray(accounts, 6);
+
+        for (let i = 0; i < chunkAccounts.length; i++) {
+          const elementList = chunkAccounts[i];
           try {
-            const req = await ewellContract.callSendMethod('Claim', '', {
-              projectId,
-              user: element.address,
-            });
-            if (req?.error) throw req.error;
+            await Promise.all(
+              elementList.map(async (element) => {
+                const [ewellContract] = await initContract(element, ewell, token, rpcUrl);
+                try {
+                  await onClaim({ account: element, ewellContract, projectId });
+                } catch (error) {
+                  errorList.push({ error, address: element.address });
+                } finally {
+                  setResultCount((v) => v + 1);
+                }
+              }),
+            );
           } catch (error) {
-            errorList.push({ error, address: element.address });
-          } finally {
-            setResultCount((v) => v + 1);
+            console.log(error, '===error');
           }
+
           setErrorList(JSON.parse(JSON.stringify(errorList)));
         }
         hide();
