@@ -1,5 +1,5 @@
 import { memo, useCallback, useState } from 'react';
-import { Button, Col, Form, FormItemProps, Input, Progress, Row, message } from 'antd';
+import { Button, Col, Form, Input, Progress, Row, message } from 'antd';
 import clsx from 'clsx';
 import cardStyles from '../Home/Card/styles.module.less';
 import homeStyles from '../Home/styles.module.less';
@@ -12,7 +12,6 @@ import { aes } from '@portkey/utils';
 import Link from 'next/link';
 import { CHILD_COUNT, EWELL_CONTRACT, MNEMONIC_KEY, RPC, TOKEN_CONTRACT } from 'constants/tools';
 import { getAccounts, initContract } from 'utils/tools';
-import { InputFormItem } from 'page-components/FormItem';
 const ReactJson = dynamic(() => import('react-json-view'), { ssr: false });
 
 const InitialValues = {
@@ -24,51 +23,6 @@ const InitialValues = {
   symbol: 'USDT',
   investAmount: timesDecimals(50, 6).toFixed(0),
 };
-
-const ItemList: FormItemProps[] = [
-  {
-    label: 'Mnemonic',
-    name: 'mnemonic',
-    rules: [{ required: true, message: 'Please Mnemonic!' }],
-  },
-  {
-    label: 'RPC',
-    name: 'rpcUrl',
-    rules: [{ required: true, message: 'Please input RPC!' }],
-  },
-  {
-    label: 'Ewell Contract',
-    name: 'ewellContract',
-    rules: [{ required: true, message: 'Please Ewell Contract!' }],
-  },
-  {
-    label: 'Child Wallet Count',
-    name: 'childCount',
-    rules: [{ required: true, message: 'Please Child Count!' }],
-  },
-  {
-    label: 'Token Contract',
-    name: 'tokenContract',
-    rules: [{ required: true, message: 'Please Token Contract!' }],
-  },
-
-  {
-    label: 'projectId',
-    name: 'projectId',
-    rules: [{ required: true, message: 'Please projectId!' }],
-  },
-
-  {
-    label: 'symbol',
-    name: 'symbol',
-    rules: [{ required: true, message: 'Please symbol!' }],
-  },
-  {
-    label: 'investAmount',
-    name: 'investAmount',
-    rules: [{ required: true, message: 'Please investAmount!' }],
-  },
-];
 
 function TeamOfService() {
   const [pin, setPin] = useState<string>();
@@ -95,7 +49,7 @@ function TeamOfService() {
         } = values;
         if (ZERO.plus(childCount).isNaN()) return message.error('Child Wallet Count Error!');
         if (!checkMnemonic(mnemonic)) return message.error('Wrong mnemonic!');
-        const accounts = await getAccounts(mnemonic, ZERO.plus(childCount).toNumber());
+        const accounts = await getAccounts(mnemonic, childCount);
         setLoading(true);
         const errorList = [];
         setTotalCount(accounts.length);
@@ -181,9 +135,42 @@ function TeamOfService() {
         </Col>
       </Row>
       <Form form={form as any} autoComplete="off" initialValues={InitialValues} onFinish={onFinish}>
-        {ItemList.map((i, index) => (
-          <InputFormItem key={index} {...i} />
-        ))}
+        <Form.Item label="Mnemonic" name="mnemonic" rules={[{ required: true, message: 'Please Mnemonic!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label="RPC" name="rpcUrl" rules={[{ required: true, message: 'Please input RPC!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Ewell Contract"
+          name="ewellContract"
+          rules={[{ required: true, message: 'Please Ewell Contract!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Child Wallet Count"
+          name="childCount"
+          rules={[{ required: true, message: 'Please Child Count!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Token Contract"
+          name="tokenContract"
+          rules={[{ required: true, message: 'Please Token Contract!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label="projectId" name="projectId" rules={[{ required: true, message: 'Please projectId!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label="symbol" name="symbol" rules={[{ required: true, message: 'Please symbol!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="investAmount"
+          name="investAmount"
+          rules={[{ required: true, message: 'Please investAmount!' }]}>
+          <Input />
+        </Form.Item>
         <Form.Item>
           <Button disabled={loading} style={{ width: '100%' }} type="primary" htmlType="submit">
             Invest
